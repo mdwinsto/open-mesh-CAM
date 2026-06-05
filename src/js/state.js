@@ -1,0 +1,32 @@
+export const state = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  activeMesh: null,
+  activeWireframe: null,
+  activeEdgesLine: null,
+  activeSlices: [],
+  gridHelper: null,
+  ambientLight: null,
+  cameraLight: null,
+  dirLight: null,
+  raycaster: null,
+  mouse: null,
+  selectionMesh: null,
+  mouseDownTime: 0,
+  pointerDownX: 0,
+  pointerDownY: 0,
+};
+
+export const config = {
+  renderMode: 'both',
+  edgeType: 'all',
+  thresholdAngle: 10,
+  meshColor: '#374151',
+  edgeColor: '#6366f1',
+  bgColor: '#0d0f14',
+  autoRotate: false,
+  showGrid: true,
+  shadowLights: true,
+};
