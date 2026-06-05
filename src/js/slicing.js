@@ -15,6 +15,7 @@ export function performSlicing(axis) {
   }
 
   clearSlices();
+  state.layerSegments = [];
 
   const { geometry } = state.activeMesh;
   const posAttr = geometry.attributes.position;
@@ -43,6 +44,7 @@ export function performSlicing(axis) {
   for (let sliceIdx = 0; sliceIdx < numSlices; sliceIdx++) {
     const layerVal = sliceMin + sliceIdx * actualIncrement;
     const plane = new THREE.Plane(normal, -layerVal);
+    const layerSegs = [];
 
     for (let i = 0; i < posAttr.count; i += 3) {
       vA.fromBufferAttribute(posAttr, i);
@@ -67,7 +69,12 @@ export function performSlicing(axis) {
 
       if (outPts.length >= 2) {
         linePoints.push(outPts[0].x, outPts[0].y, outPts[0].z, outPts[1].x, outPts[1].y, outPts[1].z);
+        layerSegs.push({ p1: outPts[0].clone(), p2: outPts[1].clone() });
       }
+    }
+
+    if (layerSegs.length > 0) {
+      state.layerSegments.push({ sliceVal: layerVal, segments: layerSegs });
     }
   }
 
@@ -82,6 +89,7 @@ export function performSlicing(axis) {
     state.activeSlices.push(sliceLines);
 
     document.getElementById('clear-slices-btn').classList.remove('hidden');
+    document.getElementById('gen-toolpaths-btn').classList.remove('hidden');
     showNotification(`Successfully sliced along ${axis.toUpperCase()} axis into ${numSlices} layers.`);
   } else {
     showNotification('No slices generated (model too small or invalid increment).', 'error');
@@ -95,7 +103,10 @@ export function clearSlices() {
     slice.material.dispose();
   });
   state.activeSlices = [];
+  state.layerSegments = [];
 
   const clearBtn = document.getElementById('clear-slices-btn');
   if (clearBtn) clearBtn.classList.add('hidden');
+  const genBtn = document.getElementById('gen-toolpaths-btn');
+  if (genBtn) genBtn.classList.add('hidden');
 }

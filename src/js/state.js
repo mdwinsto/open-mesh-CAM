@@ -7,6 +7,8 @@ export const state = {
   activeWireframe: null,
   activeEdgesLine: null,
   activeSlices: [],
+  layerSegments: [],
+  activeToolpaths: [],
   gridHelper: null,
   ambientLight: null,
   cameraLight: null,
