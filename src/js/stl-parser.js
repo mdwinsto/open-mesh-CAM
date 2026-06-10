@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { weldGeometry } from './offset.js';
 
 export function parseSTLData(buffer) {
   if (buffer.byteLength < 84) {
@@ -32,7 +32,7 @@ export function parseSTLData(buffer) {
 
   // Weld coincident vertices so the geometry is indexed and shared edges
   // are connected — required for correct smooth normals and tool mesh offsets
-  geometry = mergeVertices(geometry, 0.01);
+  geometry = weldGeometry(geometry);
 
   return { geometry, binary: isBinary };
 }

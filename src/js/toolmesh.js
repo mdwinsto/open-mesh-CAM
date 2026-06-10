@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildWeldedOffsetGeometry } from './offset.js';
 import { state } from './state.js';
 import { showNotification } from './ui.js';
 
@@ -16,21 +17,9 @@ export function generateToolMesh() {
     return;
   }
 
-  // Geometry is already welded and has smooth normals from the load pipeline;
-  // clone it so we can offset positions without modifying the original
-  const geom = state.activeMesh.geometry.clone();
-
-  const pos = geom.attributes.position;
-  const norm = geom.attributes.normal;
-  for (let i = 0; i < pos.count; i++) {
-    pos.setXYZ(
-      i,
-      pos.getX(i) + norm.getX(i) * offset,
-      pos.getY(i) + norm.getY(i) * offset,
-      pos.getZ(i) + norm.getZ(i) * offset,
-    );
-  }
-  pos.needsUpdate = true;
+  // Re-weld on position only then offset — strips face normals before merging
+  // so vertices that share a position always get merged regardless of normal direction
+  const geom = buildWeldedOffsetGeometry(state.activeMesh.geometry, offset);
   geom.computeBoundingBox();
   geom.computeBoundingSphere();
 
