@@ -2,7 +2,8 @@ import * as THREE from 'three';
 
 export function calculateMetadata(geometry, isBinary) {
   const pos = geometry.attributes.position;
-  const count = pos.count;
+  const idx = geometry.index;
+  const triCount = idx ? idx.count : pos.count;
 
   let totalArea = 0;
   let totalVolume = 0;
@@ -14,10 +15,13 @@ export function calculateMetadata(geometry, isBinary) {
   const ac = new THREE.Vector3();
   const cross = new THREE.Vector3();
 
-  for (let i = 0; i < count; i += 3) {
-    p1.fromBufferAttribute(pos, i);
-    p2.fromBufferAttribute(pos, i + 1);
-    p3.fromBufferAttribute(pos, i + 2);
+  for (let i = 0; i < triCount; i += 3) {
+    const ai = idx ? idx.getX(i)     : i;
+    const bi = idx ? idx.getX(i + 1) : i + 1;
+    const ci = idx ? idx.getX(i + 2) : i + 2;
+    p1.fromBufferAttribute(pos, ai);
+    p2.fromBufferAttribute(pos, bi);
+    p3.fromBufferAttribute(pos, ci);
 
     ab.subVectors(p2, p1);
     ac.subVectors(p3, p1);
@@ -36,7 +40,7 @@ export function calculateMetadata(geometry, isBinary) {
   document.getElementById('stats-unloaded').classList.add('hidden');
   document.getElementById('stats-loaded').classList.remove('hidden');
   document.getElementById('stat-format').innerText = isBinary ? 'Binary STL' : 'ASCII STL';
-  document.getElementById('stat-triangles').innerText = (count / 3).toLocaleString();
+  document.getElementById('stat-triangles').innerText = (triCount / 3).toLocaleString();
   document.getElementById('stat-area').innerText =
     totalArea.toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' mm²';
   document.getElementById('stat-volume').innerText =

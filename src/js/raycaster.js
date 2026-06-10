@@ -28,7 +28,7 @@ function performRaycast() {
   const intersects = state.raycaster.intersectObject(state.activeMesh);
   if (intersects.length === 0) return;
 
-  const { face } = intersects[0];
+  const { face, faceIndex } = intersects[0];
   const posAttr = state.activeMesh.geometry.attributes.position;
   const vA = new THREE.Vector3().fromBufferAttribute(posAttr, face.a).applyMatrix4(state.activeMesh.matrixWorld);
   const vB = new THREE.Vector3().fromBufferAttribute(posAttr, face.b).applyMatrix4(state.activeMesh.matrixWorld);
@@ -64,7 +64,7 @@ function performRaycast() {
   const area = new THREE.Vector3().crossVectors(edgeAB, edgeAC).length() * 0.5;
 
   const fmt = (v) => `${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)}`;
-  document.getElementById('ins-face-idx').innerText = Math.floor(face.a / 3);
+  document.getElementById('ins-face-idx').innerText = faceIndex;
   document.getElementById('ins-vA').innerText = fmt(vA);
   document.getElementById('ins-vB').innerText = fmt(vB);
   document.getElementById('ins-vC').innerText = fmt(vC);

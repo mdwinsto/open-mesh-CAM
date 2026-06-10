@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export function parseSTLData(buffer) {
   if (buffer.byteLength < 84) {
@@ -21,12 +22,19 @@ export function parseSTLData(buffer) {
     }
   }
 
+  let geometry;
   if (isBinary) {
-    return { geometry: parseBinarySTL(buffer, numFaces), binary: true };
+    geometry = parseBinarySTL(buffer, numFaces);
+  } else {
+    const text = new TextDecoder('utf-8').decode(buffer);
+    geometry = parseAsciiSTL(text);
   }
 
-  const text = new TextDecoder('utf-8').decode(buffer);
-  return { geometry: parseAsciiSTL(text), binary: false };
+  // Weld coincident vertices so the geometry is indexed and shared edges
+  // are connected — required for correct smooth normals and tool mesh offsets
+  geometry = mergeVertices(geometry, 0.01);
+
+  return { geometry, binary: isBinary };
 }
 
 function parseBinarySTL(buffer, declaredFaces) {
