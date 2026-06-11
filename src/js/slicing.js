@@ -33,6 +33,9 @@ export function performSlicing(axis) {
   else if (axis === 'y') { min = box.min.y; max = box.max.y; normal.set(0, 1, 0); }
   else { min = box.min.z; max = box.max.z; normal.set(0, 0, 1); }
 
+  // Axis X → compare Y; axis Y or Z → compare X
+  const sortKey = axis === 'x' ? 'y' : 'x';
+
   const sliceMat = new THREE.LineBasicMaterial({ color: 0xef4444, linewidth: 2, depthTest: false });
 
   const vA = new THREE.Vector3();
@@ -84,16 +87,27 @@ export function performSlicing(axis) {
         }
       }
 
-      // A triangle crossing the plane yields exactly one contour segment;
-      // collect it both for rendering (flat array) and for toolpath
-      // generation (structured per-layer endpoints)
+      // A triangle crossing the plane yields exactly one contour segment
       if (outPts.length >= 2) {
-        linePoints.push(outPts[0].x, outPts[0].y, outPts[0].z, outPts[1].x, outPts[1].y, outPts[1].z);
         layerSegs.push({ p1: outPts[0].clone(), p2: outPts[1].clone() });
       }
     }
 
     if (layerSegs.length > 0) {
+      // Orient each segment so p1's sort coordinate ≤ p2's
+      for (const seg of layerSegs) {
+        if (seg.p2[sortKey] < seg.p1[sortKey]) {
+          const tmp = seg.p1; seg.p1 = seg.p2; seg.p2 = tmp;
+        }
+      }
+
+      // Sort segments within this layer by p1's sort coordinate
+      layerSegs.sort((a, b) => a.p1[sortKey] - b.p1[sortKey]);
+
+      // Build rendering data and structured layer data from the sorted segments
+      for (const seg of layerSegs) {
+        linePoints.push(seg.p1.x, seg.p1.y, seg.p1.z, seg.p2.x, seg.p2.y, seg.p2.z);
+      }
       state.layerSegments.push({ sliceVal: layerVal, segments: layerSegs });
     }
   }
