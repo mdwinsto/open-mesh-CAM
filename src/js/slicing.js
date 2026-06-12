@@ -17,6 +17,7 @@ export function performSlicing(axis) {
 
   clearSlices();
   state.layerSegments = [];
+  state.sliceAxis = axis;
 
   // Slice the tool mesh when one exists, otherwise fall back to the STL mesh
   const sourceMesh = state.toolMesh || state.activeMesh;
@@ -142,6 +143,7 @@ export function clearSlices() {
   });
   state.activeSlices = [];
   state.layerSegments = [];
+  state.sliceAxis = null;
 
   const clearBtn = document.getElementById('clear-slices-btn');
   if (clearBtn) clearBtn.classList.add('hidden');
