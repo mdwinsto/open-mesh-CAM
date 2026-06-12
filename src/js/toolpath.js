@@ -45,6 +45,36 @@ function chainSegments(segments, tol = 0.01) {
   return chains;
 }
 
+// Build contour polylines from all ordered segments across all layers.
+// Extends the current polyline when p2 of the previous segment is within
+// tolerance of p1 of the next; otherwise starts a new polyline.
+export function buildContourPolylines(tol = 0.01) {
+  const polylines = [];
+  if (!state.layerSegments || state.layerSegments.length === 0) return polylines;
+
+  let current = null;
+
+  for (const layer of state.layerSegments) {
+    for (const seg of layer.segments) {
+      if (current === null) {
+        current = [seg.p1.clone(), seg.p2.clone()];
+      } else {
+        const tail = current[current.length - 1];
+        if (tail.distanceTo(seg.p1) <= tol) {
+          current.push(seg.p2.clone());
+        } else {
+          polylines.push(current);
+          current = [seg.p1.clone(), seg.p2.clone()];
+        }
+      }
+    }
+  }
+
+  if (current !== null) polylines.push(current);
+
+  return polylines;
+}
+
 export function generateToolpaths() {
   if (!state.layerSegments || state.layerSegments.length === 0) {
     showNotification('Generate slices first.', 'error');
