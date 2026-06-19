@@ -9,7 +9,8 @@ import { exportToBinarySTL } from './js/stl-export.js';
 import { showNotification, setRenderMode, setEdgeType } from './js/ui.js';
 import { onPointerDown, onPointerUp, clearSelection } from './js/raycaster.js';
 import { performSlicing, clearSlices } from './js/slicing.js';
-import { generateToolpaths, clearToolpaths } from './js/toolpath.js';
+import { makeToolpaths, clearToolpaths } from './js/toolpath.js';
+import { makeToolMesh } from './js/toolmesh.js';
 
 function generateProceduralSTL(type) {
   document.getElementById('loader-badge').classList.remove('hidden');
@@ -65,12 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inspector
   document.getElementById('btn-close-inspector').addEventListener('click', clearSelection);
 
+  // Tool Mesh
+  document.getElementById('tool-mesh-btn').addEventListener('click', makeToolMesh);
+
   // Slicing
   document.getElementById('slice-x-btn').addEventListener('click', () => performSlicing('x'));
   document.getElementById('slice-y-btn').addEventListener('click', () => performSlicing('y'));
   document.getElementById('slice-z-btn').addEventListener('click', () => performSlicing('z'));
   document.getElementById('clear-slices-btn').addEventListener('click', clearSlices);
-  document.getElementById('gen-toolpaths-btn').addEventListener('click', generateToolpaths);
+  document.getElementById('gen-toolpaths-btn').addEventListener('click', makeToolpaths);
   document.getElementById('clear-toolpaths-btn').addEventListener('click', clearToolpaths);
 
   // Render mode

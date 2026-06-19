@@ -8,9 +8,7 @@ export const state = {
   activeEdgesLine: null,
   activeSlices: [],
   layerSegments: [],
-  sliceAxis: null,
   activeToolpaths: [],
-  toolMesh: null,
   gridHelper: null,
   ambientLight: null,
   cameraLight: null,
@@ -21,6 +19,13 @@ export const state = {
   mouseDownTime: 0,
   pointerDownX: 0,
   pointerDownY: 0,
+  sliceAxis: null,
+  toolMesh: null,
+  boundaryConnectors: null,
+  contours: [],
+  boundaryPoints: [],
+  contoursAndBoundaryPoints: [],
+  toolPaths: [],
 };
 
 export const config = {

@@ -3,6 +3,7 @@ import { state, config } from './state.js';
 import { calculateMetadata } from './analytics.js';
 import { clearSelection } from './raycaster.js';
 import { clearSlices } from './slicing.js';
+import { clearToolMesh } from './toolmesh.js';
 
 export function displaySTL(geometry, filename, fileSize, isBinary) {
   clearActiveModels();
@@ -54,6 +55,7 @@ export function displaySTL(geometry, filename, fileSize, isBinary) {
 export function clearActiveModels() {
   clearSelection();
   clearSlices();
+  clearToolMesh();
 
   const dispose = (obj, key) => {
     if (obj) {

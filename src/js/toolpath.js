@@ -45,10 +45,7 @@ function chainSegments(segments, tol = 0.01) {
   return chains;
 }
 
-// Build contour polylines from all ordered segments across all layers.
-// Extends the current polyline when p2 of the previous segment is within
-// tolerance of p1 of the next; otherwise starts a new polyline.
-export function buildContourPolylines(tol = 0.01) {
+export function xbuildContourPolylines(tol = 0.001) {
   const polylines = [];
   if (!state.layerSegments || state.layerSegments.length === 0) return polylines;
 
@@ -75,102 +72,7 @@ export function buildContourPolylines(tol = 0.01) {
   return polylines;
 }
 
-// Build an ordered CCW array of boundary intersection points — one point per
-// slice-plane/boundary-edge crossing — then rotate so the first point is
-// nearest to contourPolylines[0][0].
-export function buildBoundaryIntersections(contourPolylines) {
-  if (!state.layerSegments?.length || !state.sliceAxis) return [];
-  if (!contourPolylines?.length) return [];
-
-  const axis = state.sliceAxis;
-  const geometry = (state.toolMesh || state.activeMesh).geometry;
-  const pos = geometry.attributes.position;
-  const idx = geometry.index;
-  const triCount = idx ? idx.count : pos.count;
-
-  // ── 1. Count triangle uses per edge; boundary edges have count === 1 ───────
-  const edgeUse = new Map();
-  for (let i = 0; i < triCount; i += 3) {
-    const a = idx ? idx.getX(i)     : i;
-    const b = idx ? idx.getX(i + 1) : i + 1;
-    const c = idx ? idx.getX(i + 2) : i + 2;
-    for (const [u, v] of [[a, b], [b, c], [c, a]]) {
-      const key = u < v ? `${u}|${v}` : `${v}|${u}`;
-      edgeUse.set(key, (edgeUse.get(key) || 0) + 1);
-    }
-  }
-
-  // ── 2. Build vertex adjacency for boundary vertices and walk the loop ──────
-  const adj = new Map();
-  for (const [key, count] of edgeUse) {
-    if (count !== 1) continue;
-    const [u, v] = key.split('|').map(Number);
-    if (!adj.has(u)) adj.set(u, []);
-    if (!adj.has(v)) adj.set(v, []);
-    adj.get(u).push(v);
-    adj.get(v).push(u);
-  }
-  if (adj.size === 0) return [];
-
-  const visited = new Set();
-  const loopIdx = [];
-  let cur = adj.keys().next().value;
-  while (cur !== undefined) {
-    loopIdx.push(cur);
-    visited.add(cur);
-    cur = adj.get(cur).find(n => !visited.has(n));
-  }
-  const loop = loopIdx.map(i => new THREE.Vector3().fromBufferAttribute(pos, i));
-
-  // ── 3. Ensure CCW when viewed from +Z (positive signed area in XY) ─────────
-  let area = 0;
-  for (let i = 0; i < loop.length; i++) {
-    const j = (i + 1) % loop.length;
-    area += loop[i].x * loop[j].y - loop[j].x * loop[i].y;
-  }
-  if (area < 0) loop.reverse();
-
-  // ── 4. Parameterise loop edges by cumulative arc length ────────────────────
-  const arcLen = [0];
-  for (let i = 1; i < loop.length; i++) {
-    arcLen.push(arcLen[i - 1] + loop[i].distanceTo(loop[i - 1]));
-  }
-  // Closing edge (loop[N-1] → loop[0])
-  arcLen.push(arcLen[arcLen.length - 1] + loop[0].distanceTo(loop[loop.length - 1]));
-
-  // ── 5. Intersect every slice plane with every boundary edge ────────────────
-  const hits = [];
-  for (const layer of state.layerSegments) {
-    const sv = layer.sliceVal;
-    for (let i = 0; i < loop.length; i++) {
-      const pA = loop[i];
-      const pB = loop[(i + 1) % loop.length];
-      const dA = pA[axis] - sv;
-      const dB = pB[axis] - sv;
-      if (dA * dB < 0) {
-        const t = dA / (dA - dB);
-        hits.push({ pt: pA.clone().lerp(pB, t), param: arcLen[i] + t * (arcLen[i + 1] - arcLen[i]) });
-      } else if (Math.abs(dA) < 1e-9) {
-        hits.push({ pt: pA.clone(), param: arcLen[i] });
-      }
-    }
-  }
-
-  // ── 6. Sort by arc length → CCW order around the boundary ─────────────────
-  hits.sort((a, b) => a.param - b.param);
-  const pts = hits.map(h => h.pt);
-
-  // ── 7. Rotate so first element is nearest to contourPolylines[0][0] ────────
-  const target = contourPolylines[0][0];
-  let bestIdx = 0, bestDist = Infinity;
-  for (let i = 0; i < pts.length; i++) {
-    const d = pts[i].distanceTo(target);
-    if (d < bestDist) { bestDist = d; bestIdx = i; }
-  }
-  return [...pts.slice(bestIdx), ...pts.slice(0, bestIdx)];
-}
-
-export function generateToolpaths() {
+export function xgenerateToolpaths() {
   if (!state.layerSegments || state.layerSegments.length === 0) {
     showNotification('Generate slices first.', 'error');
     return;
@@ -262,7 +164,288 @@ export function generateToolpaths() {
   showNotification(`Generated ${rawPaths.length} toolpath${rawPaths.length !== 1 ? 's' : ''}.`);
 }
 
+
+
+// Build contour polylines from all ordered segments across all layers.
+// Extends the current polyline when p2 of the previous segment is within
+// tolerance of p1 of the next; otherwise starts a new polyline.
+export function makeContours(tol = 0.001) {
+
+  if (!state.layerSegments || state.layerSegments.length === 0) {
+    showNotification('Generate slices first.', 'error');
+    return [];
+  }
+
+  state.contours = [];
+  let contour = [];
+
+    for (const layer of state.layerSegments) {
+      contour = [];
+      const segs = layer.segments;
+      contour.push(segs[0].p1.clone());
+      contour.push(segs[0].p2.clone());
+
+      for (let i = 1; i < segs.length; i++) {
+        if (segs[i - 1].p2.distanceTo(segs[i].p1) < tol) {
+          contour.push(segs[i].p2.clone());
+        }
+        else {
+          state.contours.push(contour);
+          contour = [];
+          contour.push(segs[i].p1.clone());
+          contour.push(segs[i].p2.clone());
+        }
+      }
+      state.contours.push(contour);
+    }
+}
+
+// Build an ordered CCW array of boundary intersection points — one point per
+// slice-plane/boundary-edge crossing — then rotate so the first point is
+// nearest to contour[0][0].
+export function makeBoundaryPoints() {
+  if (!state.layerSegments?.length || !state.sliceAxis) return;
+  if (!state.contours?.length) return;
+
+  const axis = state.sliceAxis;
+  const geometry = (state.toolMesh || state.activeMesh).geometry;
+  const pos = geometry.attributes.position;
+  const idx = geometry.index;
+  const triCount = idx ? idx.count : pos.count;
+
+  // ── 1. Count triangle uses per edge; boundary edges have count === 1 ───────
+  const edgeUse = new Map();
+  for (let i = 0; i < triCount; i += 3) {
+    const a = idx ? idx.getX(i) : i;
+    const b = idx ? idx.getX(i + 1) : i + 1;
+    const c = idx ? idx.getX(i + 2) : i + 2;
+    for (const [u, v] of [[a, b], [b, c], [c, a]]) {
+      const key = u < v ? `${u}|${v}` : `${v}|${u}`;
+      edgeUse.set(key, (edgeUse.get(key) || 0) + 1);
+    }
+  }
+
+  // ── 2. Build vertex adjacency for boundary vertices and walk the loop ──────
+  const adj = new Map();
+  for (const [key, count] of edgeUse) {
+    if (count !== 1) continue;
+    const [u, v] = key.split('|').map(Number);
+    if (!adj.has(u)) adj.set(u, []);
+    if (!adj.has(v)) adj.set(v, []);
+    adj.get(u).push(v);
+    adj.get(v).push(u);
+  }
+  if (adj.size === 0) return;
+
+  const visited = new Set();
+  const loopIdx = [];
+  let cur = adj.keys().next().value;
+  while (cur !== undefined) {
+    loopIdx.push(cur);
+    visited.add(cur);
+    cur = adj.get(cur).find(n => !visited.has(n));
+  }
+  const loop = loopIdx.map(i => new THREE.Vector3().fromBufferAttribute(pos, i));
+
+  // ── 3. Ensure CCW when viewed from +Z (positive signed area in XY) ─────────
+  let area = 0;
+  for (let i = 0; i < loop.length; i++) {
+    const j = (i + 1) % loop.length;
+    area += loop[i].x * loop[j].y - loop[j].x * loop[i].y;
+  }
+  if (area < 0) loop.reverse();
+
+  // ── 4. Parameterise loop edges by cumulative arc length ────────────────────
+  const arcLen = [0];
+  for (let i = 1; i < loop.length; i++) {
+    arcLen.push(arcLen[i - 1] + loop[i].distanceTo(loop[i - 1]));
+  }
+  // Closing edge (loop[N-1] → loop[0])
+  arcLen.push(arcLen[arcLen.length - 1] + loop[0].distanceTo(loop[loop.length - 1]));
+
+  // ── 5. Intersect every slice plane with every boundary edge ────────────────
+  const hits = [];
+  for (const layer of state.layerSegments) {
+    const sv = layer.sliceVal;
+    for (let i = 0; i < loop.length; i++) {
+      const pA = loop[i];
+      const pB = loop[(i + 1) % loop.length];
+      const dA = pA[axis] - sv;
+      const dB = pB[axis] - sv;
+      if (dA * dB < 0) {
+        const t = dA / (dA - dB);
+        hits.push({ pt: pA.clone().lerp(pB, t), param: arcLen[i] + t * (arcLen[i + 1] - arcLen[i]) });
+      } else if (Math.abs(dA) < 1e-9) {
+        hits.push({ pt: pA.clone(), param: arcLen[i] });
+      }
+    }
+  }
+
+  // ── 6. Sort by arc length → CCW order around the boundary ─────────────────
+  hits.sort((a, b) => a.param - b.param);
+  const pts = hits.map(h => h.pt);
+
+  // ── 7. Rotate so first element is nearest to contour[0][0] ────────
+  const target = state.contours[0][0];
+  let bestIdx = 0, bestDist = Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const d = pts[i].distanceTo(target);
+    if (d < bestDist) { bestDist = d; bestIdx = i; }
+  }
+  state.boundaryPoints = [...pts.slice(bestIdx), ...pts.slice(0, bestIdx)];
+}
+
+function makeContoursAndBoundaryPoints(tol = 0.001) {
+  const contours = state.contours;
+  const boundaryPoints = state.boundaryPoints;
+
+  // Find the boundary index whose point is within tolerance
+  function findNearestBoundaryIndex(pt) {
+    for (let i = 0; i < boundaryPoints.length; i++) {
+      if (pt.distanceTo(boundaryPoints[i]) < tol) {
+        return i;
+      }
+    }
+    console.warn("Contour endpoint not within tolerance of any boundary point.");
+    return -1;
+  }
+
+  // Build the result array
+  const results = [];
+
+  contours.forEach((contour, contourIndex) => {
+    const startPt = contour[0];
+    const endPt = contour[contour.length - 1];
+
+    const startBoundaryIndex = findNearestBoundaryIndex(startPt);
+    const endBoundaryIndex = findNearestBoundaryIndex(endPt);
+
+    results.push({
+      contourIndex,
+      contour,
+      startBoundaryIndex,
+      endBoundaryIndex
+    });
+  });
+
+  state.contoursAndBoundaryPoints = results;
+}
+
+const contourInfo = {
+  cbps: [],
+  cbp: {},
+  contour: [],
+  init() {
+    this.cbps = [...state.contoursAndBoundaryPoints];
+  },
+  hasContours() {
+    if (this.cbps.length > 0) {
+      this.cbp = this.cbps[0];
+      this.contour = this.cbps[0].contour;
+      this.cbps.splice(0, 1);
+      return true;
+    }
+    return false;
+  },
+  nextMatchingStart() {
+    const startPt = this.cbp.startBoundaryIndex;
+    const cbpA = this.cbps.find(item => startPt + 1 === item.startBoundaryIndex);
+    const cbpB = this.cbps.find(item => startPt - 1 === item.startBoundaryIndex);
+
+    if (cbpA) {
+      this.cbp = cbpA;
+      this.contour = cbpA.contour;
+      this.cbps.splice(this.cbps.indexOf(cbpA), 1);
+      return true;
+    }
+    else if (cbpB) {
+      this.cbp = cbpB;
+      this.cbps.splice(this.cbps.indexOf(cbpB), 1);
+      this.contour = cbpB.contour;
+      return true;
+    }
+    return false;
+  },
+  nextMatchingEnd() {
+    const endPt = this.cbp.endBoundaryIndex;
+    const cbpA = this.cbps.find(item => endPt + 1 === item.endBoundaryIndex);
+    const cbpB = this.cbps.find(item => endPt - 1 === item.endBoundaryIndex);
+
+    if (cbpA) {
+      this.cbp = cbpA;
+      this.contour = cbpA.contour;
+      this.cbps.splice(this.cbps.indexOf(cbpA), 1);
+      return true;
+    }
+    else if (cbpB) {
+      this.cbp = cbpB;
+      this.cbps.splice(this.cbps.indexOf(cbpB), 1);
+      this.contour = cbpB.contour;
+      return true;
+    }
+    return false;
+  },
+}
+
+export function makeToolpaths() {
+  state.toolPaths = [];
+  let path = [];
+
+  if (!state.layerSegments || state.layerSegments.length === 0) {
+    showNotification('Generate slices first.', 'error');
+    return;
+  }
+
+  clearToolpaths();
+  makeContours();
+  makeBoundaryPoints();
+  makeContoursAndBoundaryPoints();
+  contourInfo.init();
+
+  while (contourInfo.hasContours()) {
+    path.push(...contourInfo.contour);
+
+    while (true) {
+
+      if (contourInfo.nextMatchingEnd()) {
+        path.push(...contourInfo.contour.reverse());
+      }
+      else break;
+      
+      if (contourInfo.nextMatchingStart()) {
+        path.push(...contourInfo.contour);
+      }
+      else break;
+    }
+    state.toolPaths.push(path);
+    path = [];
+  }
+  
+  // Render each toolpath as a continuous line in a distinct color
+  const palette = [0x00ff88, 0x00ccff, 0xff8800, 0xff00cc];
+  state.toolPaths.forEach((pts, i) => {
+    const geom = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({
+      color: palette[i % palette.length],
+      linewidth: 2,
+      depthTest: false,
+    });
+    const line = new THREE.Line(geom, mat);
+    if (state.activeMesh) {
+      line.position.copy(state.activeMesh.position);
+      line.rotation.copy(state.activeMesh.rotation);
+      line.scale.copy(state.activeMesh.scale);
+    }
+    state.scene.add(line);
+    state.activeToolpaths.push(line);
+  });
+
+  document.getElementById('clear-toolpaths-btn').classList.remove('hidden');
+  showNotification(`Generated ${state.toolPaths.length} toolpath${state.toolPaths.length !== 1 ? 's' : ''}.`);
+}
+
 export function clearToolpaths() {
+  state.toolPaths = [];
   state.activeToolpaths.forEach(tp => {
     state.scene.remove(tp);
     tp.geometry.dispose();
