@@ -4,6 +4,27 @@ import { findBoundaryVertexIndices } from './mesh-utils.js';
 import { state } from './state.js';
 import { showNotification } from './ui.js';
 
+function createOffsetMaterial(color) {
+  return new THREE.MeshStandardMaterial({
+    color,
+    transparent: true,
+    opacity: 0.3,
+    side: THREE.DoubleSide,
+    roughness: 0.6,
+    metalness: 0.1,
+    depthWrite: false,
+  });
+}
+
+function readOffset() {
+  const offset = parseFloat(document.getElementById('tool-mesh-offset').value) || 3.175;
+  if (offset <= 0) {
+    showNotification('Tool mesh offset must be greater than 0.', 'error');
+    return null;
+  }
+  return offset;
+}
+
 export function makeToolMesh() {
   if (!state.activeMesh) {
     showNotification('No mesh loaded.', 'error');
@@ -12,29 +33,20 @@ export function makeToolMesh() {
 
   clearToolMesh();
 
-  const offset = parseFloat(document.getElementById('tool-mesh-offset').value) || 3.175;
-  if (offset <= 0) {
-    showNotification('Tool mesh offset must be greater than 0.', 'error');
-    return;
-  }
+  const offset = readOffset();
+  if (offset === null) return;
+
+  const iterations = parseInt(document.getElementById('smooth-iterations').value, 10) || 0;
 
   // Re-weld on position only then offset — strips face normals before merging
-  // so vertices that share a position always get merged regardless of normal direction
-  const geom = buildWeldedOffsetGeometry(state.activeMesh.geometry, offset);
+  // so vertices that share a position always get merged regardless of normal direction.
+  // Normals are relaxed over `iterations` passes first so the offset doesn't
+  // amplify faceting noise into self-crossing geometry.
+  const geom = buildWeldedOffsetGeometry(state.activeMesh.geometry, offset, iterations);
   geom.computeBoundingBox();
   geom.computeBoundingSphere();
 
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0xf97316,
-    transparent: true,
-    opacity: 0.3,
-    side: THREE.DoubleSide,
-    roughness: 0.6,
-    metalness: 0.1,
-    depthWrite: false,
-  });
-
-  const mesh = new THREE.Mesh(geom, mat);
+  const mesh = new THREE.Mesh(geom, createOffsetMaterial(0xf97316));
   mesh.position.copy(state.activeMesh.position);
   mesh.rotation.copy(state.activeMesh.rotation);
   mesh.scale.copy(state.activeMesh.scale);
@@ -44,7 +56,7 @@ export function makeToolMesh() {
 
   buildBoundaryConnectors();
 
-  showNotification(`Tool mesh generated (offset: ${offset} mm).`);
+  showNotification(`Tool mesh generated (offset: ${offset} mm, ${iterations} smoothing pass${iterations !== 1 ? 'es' : ''}).`);
 }
 
 // Draw a line between each STL mesh boundary vertex and its corresponding
