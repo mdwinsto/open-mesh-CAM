@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { buildWeldedOffsetGeometry } from './offset.js';
 import { findBoundaryVertexIndices } from './mesh-utils.js';
-import { state } from './state.js';
+import { state, config } from './state.js';
 import { showNotification } from './ui.js';
 
 function createOffsetMaterial(color) {
@@ -84,6 +84,7 @@ function buildBoundaryConnectors() {
   lines.position.copy(state.activeMesh.position);
   lines.rotation.copy(state.activeMesh.rotation);
   lines.scale.copy(state.activeMesh.scale);
+  lines.visible = config.showBoundaryConnectors;
 
   state.boundaryConnectors = lines;
   state.scene.add(lines);

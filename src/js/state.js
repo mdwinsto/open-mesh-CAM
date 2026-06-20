@@ -35,7 +35,6 @@ export const config = {
   meshColor: '#374151',
   edgeColor: '#6366f1',
   bgColor: '#0d0f14',
-  autoRotate: false,
   showGrid: true,
-  shadowLights: true,
+  showBoundaryConnectors: true,
 };

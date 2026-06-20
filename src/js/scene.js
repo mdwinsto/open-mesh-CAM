@@ -85,12 +85,6 @@ export function initThree() {
 function animate() {
   requestAnimationFrame(animate);
 
-  if (config.autoRotate && state.activeMesh) {
-    state.activeMesh.rotation.z += 0.004;
-    if (state.activeWireframe) state.activeWireframe.rotation.z = state.activeMesh.rotation.z;
-    if (state.activeEdgesLine) state.activeEdgesLine.rotation.z = state.activeMesh.rotation.z;
-  }
-
   state.cameraLight.position.copy(state.camera.position);
   state.controls.update();
   state.renderer.render(state.scene, state.camera);

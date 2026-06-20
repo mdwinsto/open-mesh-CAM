@@ -5,32 +5,11 @@ import { state, config } from './js/state.js';
 import { initThree } from './js/scene.js';
 import { displaySTL, applyRenderSettings, centerAndScaleModel } from './js/renderer.js';
 import { parseSTLData } from './js/stl-parser.js';
-import { exportToBinarySTL } from './js/stl-export.js';
 import { showNotification, setRenderMode, setEdgeType } from './js/ui.js';
 import { onPointerDown, onPointerUp, clearSelection } from './js/raycaster.js';
 import { performSlicing, clearSlices } from './js/slicing.js';
 import { makeToolpaths, clearToolpaths } from './js/toolpath.js';
 import { makeToolMesh } from './js/toolmesh.js';
-
-function generateProceduralSTL(type) {
-  document.getElementById('loader-badge').classList.remove('hidden');
-  const geom = type === 'knot'
-    ? new THREE.TorusKnotGeometry(12, 3.5, 120, 16)
-    : new THREE.SphereGeometry(15, 24, 24);
-
-  const buffer = exportToBinarySTL(geom);
-  geom.dispose();
-
-  try {
-    const result = parseSTLData(buffer);
-    const name = type === 'knot' ? 'Demo_TorusKnot.stl' : 'Demo_Sphere.stl';
-    displaySTL(result.geometry, name, buffer.byteLength, result.binary);
-    showNotification(`Successfully loaded Demo ${type === 'knot' ? 'Torus Knot' : 'Sphere'}.`);
-  } catch (err) {
-    showNotification('Failed to load procedural model: ' + err.message, 'error');
-    document.getElementById('loader-badge').classList.add('hidden');
-  }
-}
 
 function processFile(file) {
   if (!file) return;
@@ -60,8 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   state.renderer.domElement.addEventListener('pointerdown', onPointerDown);
   state.renderer.domElement.addEventListener('pointerup', onPointerUp);
-
-  generateProceduralSTL('knot');
 
   // Inspector
   document.getElementById('btn-close-inspector').addEventListener('click', clearSelection);
@@ -127,15 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Viewport toggles
-  document.getElementById('toggle-rotate').addEventListener('change', (e) => {
-    config.autoRotate = e.target.checked;
-  });
   document.getElementById('toggle-grid').addEventListener('change', (e) => {
     config.showGrid = e.target.checked;
     applyRenderSettings();
   });
-  document.getElementById('toggle-lights').addEventListener('change', (e) => {
-    config.shadowLights = e.target.checked;
+  document.getElementById('toggle-boundary-connectors').addEventListener('change', (e) => {
+    config.showBoundaryConnectors = e.target.checked;
     applyRenderSettings();
   });
 
@@ -147,10 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
       centerAndScaleModel();
     }
   });
-
-  // Demo loaders
-  document.getElementById('load-knot-btn').addEventListener('click', () => generateProceduralSTL('knot'));
-  document.getElementById('load-sphere-btn').addEventListener('click', () => generateProceduralSTL('sphere'));
 
   // File input & drag-and-drop
   const fileInput = document.getElementById('file-input');

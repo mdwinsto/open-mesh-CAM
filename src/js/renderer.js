@@ -117,5 +117,5 @@ export function applyRenderSettings() {
 
   state.scene.background.set(config.bgColor);
   if (state.gridHelper) state.gridHelper.visible = config.showGrid;
-  state.dirLight.castShadow = config.shadowLights;
+  if (state.boundaryConnectors) state.boundaryConnectors.visible = config.showBoundaryConnectors;
 }
