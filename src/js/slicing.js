@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { state } from './state.js';
 import { showNotification } from './ui.js';
+import { clearToolpaths } from './toolpath.js';
 
 export function performSlicing(axis) {
-  // Guard: need a mesh and a valid increment before slicing
-  if (!state.activeMesh) {
-    showNotification('No mesh loaded to slice.', 'error');
+  // Guard: need a tool mesh and a valid increment before slicing. Slicing the
+  // tool mesh (rather than the raw STL) is required so the resulting toolpaths
+  // carry tool-radius compensation baked into every point.
+  if (!state.toolMesh) {
+    showNotification('Generate a tool mesh first.', 'error');
     return;
   }
 
@@ -19,8 +22,7 @@ export function performSlicing(axis) {
   state.layerSegments = [];
   state.sliceAxis = axis;
 
-  // Slice the tool mesh when one exists, otherwise fall back to the STL mesh
-  const sourceMesh = state.toolMesh || state.activeMesh;
+  const sourceMesh = state.toolMesh;
 
   // Determine the slicing range and plane normal for the chosen axis
   const { geometry } = sourceMesh;
@@ -135,7 +137,10 @@ export function performSlicing(axis) {
 
 export function clearSlices() {
   // Remove and dispose all rendered slice contours, reset stored layer
-  // data, and hide the buttons that depend on slices existing
+  // data, and hide the buttons that depend on slices existing. Toolpaths
+  // are derived from these slices, so they're invalidated too.
+  clearToolpaths();
+
   state.activeSlices.forEach((slice) => {
     state.scene.remove(slice);
     slice.geometry.dispose();

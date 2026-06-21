@@ -21,6 +21,7 @@ export const state = {
   pointerDownY: 0,
   sliceAxis: null,
   toolMesh: null,
+  toolRadius: null,
   boundaryConnectors: null,
   contours: [],
   boundaryPoints: [],

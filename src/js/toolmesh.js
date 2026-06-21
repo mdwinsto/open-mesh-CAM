@@ -3,6 +3,7 @@ import { buildWeldedOffsetGeometry } from './offset.js';
 import { findBoundaryVertexIndices } from './mesh-utils.js';
 import { state, config } from './state.js';
 import { showNotification } from './ui.js';
+import { clearSlices } from './slicing.js';
 
 function createOffsetMaterial(color) {
   return new THREE.MeshStandardMaterial({
@@ -16,13 +17,13 @@ function createOffsetMaterial(color) {
   });
 }
 
-function readOffset() {
-  const offset = parseFloat(document.getElementById('tool-mesh-offset').value) || 3.175;
-  if (offset <= 0) {
-    showNotification('Tool mesh offset must be greater than 0.', 'error');
+function readToolRadius() {
+  const radius = parseFloat(document.getElementById('tool-radius').value) || 3.175;
+  if (radius <= 0) {
+    showNotification('Tool radius must be greater than 0.', 'error');
     return null;
   }
-  return offset;
+  return radius;
 }
 
 export function makeToolMesh() {
@@ -32,9 +33,13 @@ export function makeToolMesh() {
   }
 
   clearToolMesh();
+  // Slices (and the toolpaths derived from them) were built from the previous
+  // tool mesh and its radius — stale once the tool mesh is rebuilt, so drop
+  // them to avoid G-code being generated against a mismatched radius.
+  clearSlices();
 
-  const offset = readOffset();
-  if (offset === null) return;
+  const radius = readToolRadius();
+  if (radius === null) return;
 
   const iterations = parseInt(document.getElementById('smooth-iterations').value, 10) || 0;
 
@@ -42,7 +47,7 @@ export function makeToolMesh() {
   // so vertices that share a position always get merged regardless of normal direction.
   // Normals are relaxed over `iterations` passes first so the offset doesn't
   // amplify faceting noise into self-crossing geometry.
-  const geom = buildWeldedOffsetGeometry(state.activeMesh.geometry, offset, iterations);
+  const geom = buildWeldedOffsetGeometry(state.activeMesh.geometry, radius, iterations);
   geom.computeBoundingBox();
   geom.computeBoundingSphere();
 
@@ -52,11 +57,12 @@ export function makeToolMesh() {
   mesh.scale.copy(state.activeMesh.scale);
 
   state.toolMesh = mesh;
+  state.toolRadius = radius;
   state.scene.add(mesh);
 
   buildBoundaryConnectors();
 
-  showNotification(`Tool mesh generated (offset: ${offset} mm, ${iterations} smoothing pass${iterations !== 1 ? 'es' : ''}).`);
+  showNotification(`Tool mesh generated (radius: ${radius} mm, ${iterations} smoothing pass${iterations !== 1 ? 'es' : ''}).`);
 }
 
 // Draw a line between each STL mesh boundary vertex and its corresponding

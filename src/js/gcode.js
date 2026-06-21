@@ -21,9 +21,24 @@ export function generateGCode() {
     return;
   }
 
+  if (state.toolRadius == null) {
+    showNotification('No tool radius recorded — regenerate the tool mesh before exporting G-code.', 'error');
+    return;
+  }
+
+  // state.toolPaths points are cutter-location (ball-center) positions, offset
+  // from the part surface along its normal by the tool radius. Machine tool
+  // length offset is referenced to the tip, which sits exactly toolRadius
+  // straight below the ball center regardless of the local surface normal —
+  // so the tip Z is a flat per-point subtraction, applied to Z only.
+  const toolRadius = state.toolRadius;
   const mesh = state.activeMesh;
   mesh.updateMatrixWorld();
-  const toWorld = (p) => p.clone().applyMatrix4(mesh.matrixWorld);
+  const toWorld = (p) => {
+    const w = p.clone().applyMatrix4(mesh.matrixWorld);
+    w.z -= toolRadius;
+    return w;
+  };
 
   const lines = ['G21 ; millimeters', 'G90 ; absolute positioning'];
 
