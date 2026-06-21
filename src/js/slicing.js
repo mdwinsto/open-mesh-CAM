@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { state } from './state.js';
+import { state, config } from './state.js';
 import { showNotification } from './ui.js';
 import { clearToolpaths } from './toolpath.js';
 
@@ -124,6 +124,7 @@ export function performSlicing(axis) {
     sliceLines.position.copy(sourceMesh.position);
     sliceLines.rotation.copy(sourceMesh.rotation);
     sliceLines.scale.copy(sourceMesh.scale);
+    sliceLines.visible = config.showSlices;
     state.scene.add(sliceLines);
     state.activeSlices.push(sliceLines);
 

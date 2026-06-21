@@ -5,7 +5,6 @@ export const state = {
   controls: null,
   activeMesh: null,
   activeWireframe: null,
-  activeEdgesLine: null,
   activeSlices: [],
   layerSegments: [],
   activeToolpaths: [],
@@ -31,11 +30,13 @@ export const state = {
 
 export const config = {
   renderMode: 'both',
-  edgeType: 'all',
-  thresholdAngle: 10,
   meshColor: '#374151',
   edgeColor: '#6366f1',
   bgColor: '#0d0f14',
   showGrid: true,
   showBoundaryConnectors: true,
+  showStlMesh: true,
+  showToolMesh: true,
+  showSlices: true,
+  showToolpaths: true,
 };

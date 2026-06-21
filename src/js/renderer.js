@@ -29,19 +29,8 @@ export function displaySTL(geometry, filename, fileSize, isBinary) {
   });
   state.activeWireframe = new THREE.LineSegments(new THREE.WireframeGeometry(geometry), wireframeMat);
 
-  const edgesMat = new THREE.LineBasicMaterial({
-    color: new THREE.Color(config.edgeColor),
-    transparent: true,
-    opacity: 0.9,
-  });
-  state.activeEdgesLine = new THREE.LineSegments(
-    new THREE.EdgesGeometry(geometry, config.thresholdAngle),
-    edgesMat
-  );
-
   state.scene.add(state.activeMesh);
   state.scene.add(state.activeWireframe);
-  state.scene.add(state.activeEdgesLine);
 
   centerAndScaleModel();
   applyRenderSettings();
@@ -67,7 +56,6 @@ export function clearActiveModels() {
 
   dispose(state.activeMesh, 'activeMesh');
   dispose(state.activeWireframe, 'activeWireframe');
-  dispose(state.activeEdgesLine, 'activeEdgesLine');
 }
 
 export function centerAndScaleModel() {
@@ -84,7 +72,6 @@ export function centerAndScaleModel() {
 
   state.activeMesh.position.set(0, 0, 0);
   if (state.activeWireframe) state.activeWireframe.position.set(0, 0, 0);
-  if (state.activeEdgesLine) state.activeEdgesLine.position.set(0, 0, 0);
 
   const maxDim = Math.max(size.x, size.y, size.z);
   const fov = state.camera.fov * (Math.PI / 180);
@@ -111,15 +98,16 @@ export function applyRenderSettings() {
   const showEdges = config.renderMode !== 'mesh';
   const showMesh = config.renderMode !== 'edges';
 
-  state.activeMesh.visible = showMesh;
-  if (state.activeWireframe) state.activeWireframe.visible = showEdges && config.edgeType === 'all';
-  if (state.activeEdgesLine) state.activeEdgesLine.visible = showEdges && config.edgeType === 'smart';
+  state.activeMesh.visible = showMesh && config.showStlMesh;
+  if (state.activeWireframe) state.activeWireframe.visible = showEdges && config.showStlMesh;
 
   state.activeMesh.material.color.set(config.meshColor);
   if (state.activeWireframe) state.activeWireframe.material.color.set(config.edgeColor);
-  if (state.activeEdgesLine) state.activeEdgesLine.material.color.set(config.edgeColor);
 
   state.scene.background.set(config.bgColor);
   if (state.gridHelper) state.gridHelper.visible = config.showGrid;
   if (state.boundaryConnectors) state.boundaryConnectors.visible = config.showBoundaryConnectors;
+  if (state.toolMesh) state.toolMesh.visible = config.showToolMesh;
+  state.activeSlices.forEach((slice) => { slice.visible = config.showSlices; });
+  state.activeToolpaths.forEach((tp) => { tp.visible = config.showToolpaths; });
 }

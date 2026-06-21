@@ -1,11 +1,10 @@
 import './app.css';
-import * as THREE from 'three';
 import { createIcons, icons } from 'lucide';
 import { state, config } from './js/state.js';
 import { initThree } from './js/scene.js';
 import { displaySTL, applyRenderSettings, centerAndScaleModel } from './js/renderer.js';
 import { parseSTLData } from './js/stl-parser.js';
-import { showNotification, setRenderMode, setEdgeType } from './js/ui.js';
+import { showNotification, setRenderMode } from './js/ui.js';
 import { onPointerDown, onPointerUp, clearSelection } from './js/raycaster.js';
 import { performSlicing, clearSlices } from './js/slicing.js';
 import { makeToolpaths, clearToolpaths } from './js/toolpath.js';
@@ -63,10 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('mode-edges-only').addEventListener('click', () => setRenderMode('edges'));
   document.getElementById('mode-mesh-only').addEventListener('click', () => setRenderMode('mesh'));
 
-  // Edge type
-  document.getElementById('edge-type-all').addEventListener('click', () => setEdgeType('all'));
-  document.getElementById('edge-type-smart').addEventListener('click', () => setEdgeType('smart'));
-
   // Color pickers
   document.getElementById('color-edge').addEventListener('input', (e) => {
     config.edgeColor = e.target.value;
@@ -84,30 +79,23 @@ document.addEventListener('DOMContentLoaded', () => {
     applyRenderSettings();
   });
 
-  // Threshold slider
-  document.getElementById('edge-threshold').addEventListener('input', (e) => {
-    const angle = parseInt(e.target.value);
-    document.getElementById('threshold-val').innerText = angle + '°';
-    config.thresholdAngle = angle;
-
-    if (state.activeMesh) {
-      state.scene.remove(state.activeEdgesLine);
-      state.activeEdgesLine.geometry.dispose();
-
-      const edgesGeom = new THREE.EdgesGeometry(state.activeMesh.geometry, config.thresholdAngle);
-      const edgesMat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(config.edgeColor),
-        transparent: true,
-        opacity: 0.9,
-      });
-      state.activeEdgesLine = new THREE.LineSegments(edgesGeom, edgesMat);
-      state.activeEdgesLine.rotation.z = state.activeMesh.rotation.z;
-      state.scene.add(state.activeEdgesLine);
-      applyRenderSettings();
-    }
-  });
-
   // Viewport toggles
+  document.getElementById('toggle-stl-mesh').addEventListener('change', (e) => {
+    config.showStlMesh = e.target.checked;
+    applyRenderSettings();
+  });
+  document.getElementById('toggle-tool-mesh').addEventListener('change', (e) => {
+    config.showToolMesh = e.target.checked;
+    applyRenderSettings();
+  });
+  document.getElementById('toggle-slices').addEventListener('change', (e) => {
+    config.showSlices = e.target.checked;
+    applyRenderSettings();
+  });
+  document.getElementById('toggle-toolpaths').addEventListener('change', (e) => {
+    config.showToolpaths = e.target.checked;
+    applyRenderSettings();
+  });
   document.getElementById('toggle-grid').addEventListener('change', (e) => {
     config.showGrid = e.target.checked;
     applyRenderSettings();

@@ -55,6 +55,7 @@ export function makeToolMesh() {
   mesh.position.copy(state.activeMesh.position);
   mesh.rotation.copy(state.activeMesh.rotation);
   mesh.scale.copy(state.activeMesh.scale);
+  mesh.visible = config.showToolMesh;
 
   state.toolMesh = mesh;
   state.toolRadius = radius;

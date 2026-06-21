@@ -50,31 +50,3 @@ export function setRenderMode(mode) {
     `py-1.5 text-xs font-semibold rounded-md transition-all ${mode === 'mesh' ? 'text-white bg-indigo-600 shadow-sm' : 'text-gray-400 hover:text-white'}`;
   applyRenderSettings();
 }
-
-export function setEdgeType(type) {
-  config.edgeType = type;
-
-  const allBtn = document.getElementById('edge-type-all');
-  const smartBtn = document.getElementById('edge-type-smart');
-  const sliderContainer = document.getElementById('threshold-slider-container');
-  const sliderInput = document.getElementById('edge-threshold');
-
-  const activeClass =
-    'py-1.5 px-3 rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-xs font-medium text-indigo-300 transition-all text-center flex items-center justify-center gap-1';
-  const inactiveClass =
-    'py-1.5 px-3 rounded-lg border border-gray-800 bg-gray-950/40 text-xs font-medium text-gray-400 hover:text-white hover:border-gray-700 transition-all text-center flex items-center justify-center gap-1';
-
-  if (type === 'all') {
-    allBtn.className = activeClass;
-    smartBtn.className = inactiveClass;
-    sliderContainer.className = 'space-y-1.5 opacity-50 pointer-events-none transition-all duration-300';
-    sliderInput.disabled = true;
-  } else {
-    allBtn.className = inactiveClass;
-    smartBtn.className = activeClass;
-    sliderContainer.className = 'space-y-1.5 opacity-100 transition-all duration-300';
-    sliderInput.disabled = false;
-  }
-
-  applyRenderSettings();
-}

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { state } from './state.js';
+import { state, config } from './state.js';
 import { showNotification } from './ui.js';
 
 // Chain unordered segment pairs into polylines by matching endpoints.
@@ -436,6 +436,7 @@ export function makeToolpaths() {
       line.rotation.copy(state.activeMesh.rotation);
       line.scale.copy(state.activeMesh.scale);
     }
+    line.visible = config.showToolpaths;
     state.scene.add(line);
     state.activeToolpaths.push(line);
   });
