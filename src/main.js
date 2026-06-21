@@ -10,6 +10,7 @@ import { onPointerDown, onPointerUp, clearSelection } from './js/raycaster.js';
 import { performSlicing, clearSlices } from './js/slicing.js';
 import { makeToolpaths, clearToolpaths } from './js/toolpath.js';
 import { makeToolMesh } from './js/toolmesh.js';
+import { generateGCode } from './js/gcode.js';
 
 function processFile(file) {
   if (!file) return;
@@ -53,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clear-slices-btn').addEventListener('click', clearSlices);
   document.getElementById('gen-toolpaths-btn').addEventListener('click', makeToolpaths);
   document.getElementById('clear-toolpaths-btn').addEventListener('click', clearToolpaths);
+
+  // G-Code
+  document.getElementById('gen-gcode-btn').addEventListener('click', generateGCode);
 
   // Render mode
   document.getElementById('mode-mesh-edges').addEventListener('click', () => setRenderMode('both'));
