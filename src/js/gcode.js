@@ -58,7 +58,7 @@ export function generateGCode() {
   }
 
   lines.push(`G0 Z${fmt(safeZ)}`);
-  lines.push('M2 ; program end');
+  lines.push('M30 ; program end');
 
   const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
