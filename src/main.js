@@ -9,7 +9,7 @@ import { onPointerDown, onPointerUp, clearSelection } from './js/raycaster.js';
 import { performSlicing, clearSlices } from './js/slicing.js';
 import { makeToolpaths, clearToolpaths } from './js/toolpath.js';
 import { makeToolMesh } from './js/toolmesh.js';
-import { generateGCode } from './js/gcode.js';
+import { previewGCode, downloadGCode } from './js/gcode.js';
 
 function processFile(file) {
   if (!file) return;
@@ -55,29 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clear-toolpaths-btn').addEventListener('click', clearToolpaths);
 
   // G-Code
-  document.getElementById('gen-gcode-btn').addEventListener('click', generateGCode);
+  document.getElementById('gen-gcode-btn').addEventListener('click', previewGCode);
+  document.getElementById('download-gcode-btn').addEventListener('click', downloadGCode);
 
   // Render mode
   document.getElementById('mode-mesh-edges').addEventListener('click', () => setRenderMode('both'));
   document.getElementById('mode-edges-only').addEventListener('click', () => setRenderMode('edges'));
   document.getElementById('mode-mesh-only').addEventListener('click', () => setRenderMode('mesh'));
-
-  // Color pickers
-  document.getElementById('color-edge').addEventListener('input', (e) => {
-    config.edgeColor = e.target.value;
-    document.getElementById('color-edge-hex').innerText = e.target.value;
-    applyRenderSettings();
-  });
-  document.getElementById('color-mesh').addEventListener('input', (e) => {
-    config.meshColor = e.target.value;
-    document.getElementById('color-mesh-hex').innerText = e.target.value;
-    applyRenderSettings();
-  });
-  document.getElementById('color-bg').addEventListener('input', (e) => {
-    config.bgColor = e.target.value;
-    document.getElementById('color-bg-hex').innerText = e.target.value;
-    applyRenderSettings();
-  });
 
   // Viewport toggles
   document.getElementById('toggle-stl-mesh').addEventListener('change', (e) => {
@@ -94,6 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('toggle-toolpaths').addEventListener('change', (e) => {
     config.showToolpaths = e.target.checked;
+    applyRenderSettings();
+  });
+  document.getElementById('toggle-gcode-path').addEventListener('change', (e) => {
+    config.showGcodePath = e.target.checked;
     applyRenderSettings();
   });
   document.getElementById('toggle-grid').addEventListener('change', (e) => {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { state, config } from './state.js';
 import { showNotification } from './ui.js';
+import { clearGCodeVisualization } from './gcode.js';
 
 // Chain unordered segment pairs into polylines by matching endpoints.
 function chainSegments(segments, tol = 0.01) {
@@ -446,6 +447,9 @@ export function makeToolpaths() {
 }
 
 export function clearToolpaths() {
+  // The G-code preview is derived from these toolpaths, so it's invalidated too.
+  clearGCodeVisualization();
+
   state.toolPaths = [];
   state.activeToolpaths.forEach(tp => {
     state.scene.remove(tp);

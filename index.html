@@ -119,7 +119,12 @@
                     </div>
                     <button id="gen-gcode-btn" class="w-full py-1.5 px-2 bg-violet-950/40 hover:bg-violet-900/60 text-violet-400 hover:text-violet-200 text-xs font-medium rounded-lg border border-violet-800/50 transition-all shadow-sm">
                         <span class="inline-flex items-center justify-center gap-1.5 w-full">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Generate G-Code
+                            <i data-lucide="eye" class="w-3.5 h-3.5"></i> Preview G-Code
+                        </span>
+                    </button>
+                    <button id="download-gcode-btn" class="w-full py-1.5 px-2 bg-violet-950/40 hover:bg-violet-900/60 text-violet-400 hover:text-violet-200 text-xs font-medium rounded-lg border border-violet-800/50 transition-all shadow-sm">
+                        <span class="inline-flex items-center justify-center gap-1.5 w-full">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download G-Code
                         </span>
                     </button>
                 </div>
@@ -134,34 +139,6 @@
                             <button id="mode-mesh-edges" class="py-1.5 text-xs font-semibold rounded-md transition-all text-white bg-indigo-600 shadow-sm">Mesh+Edges</button>
                             <button id="mode-edges-only" class="py-1.5 text-xs font-semibold rounded-md transition-all text-gray-400 hover:text-white">Edges Only</button>
                             <button id="mode-mesh-only" class="py-1.5 text-xs font-semibold rounded-md transition-all text-gray-400 hover:text-white">Mesh Only</button>
-                        </div>
-                    </div>
-
-                    <!-- Colors -->
-                    <div class="space-y-3">
-                        <h4 class="text-xs font-semibold text-gray-400">Custom Colors</h4>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[11px] text-gray-500 block">Edge Color</label>
-                                <div class="flex items-center space-x-2 bg-gray-950 border border-gray-800 rounded-lg p-1.5">
-                                    <input type="color" id="color-edge" value="#6366f1" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer" />
-                                    <span id="color-edge-hex" class="text-xs font-mono text-gray-400">#6366f1</span>
-                                </div>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[11px] text-gray-500 block">Mesh Color</label>
-                                <div class="flex items-center space-x-2 bg-gray-950 border border-gray-800 rounded-lg p-1.5">
-                                    <input type="color" id="color-mesh" value="#374151" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer" />
-                                    <span id="color-mesh-hex" class="text-xs font-mono text-gray-400">#374151</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[11px] text-gray-500 block">Background Environment Color</label>
-                            <div class="flex items-center space-x-2 bg-gray-950 border border-gray-800 rounded-lg p-1.5">
-                                <input type="color" id="color-bg" value="#0d0f14" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer" />
-                                <span id="color-bg-hex" class="text-xs font-mono text-gray-400">#0d0f14</span>
-                            </div>
                         </div>
                     </div>
 
@@ -191,6 +168,12 @@
                                 <i data-lucide="route" class="w-3.5 h-3.5"></i> Toolpaths
                             </span>
                             <input id="toggle-toolpaths" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 bg-gray-900 border-gray-700 focus:ring-indigo-500" />
+                        </label>
+                        <label class="flex items-center justify-between p-2 rounded-lg bg-gray-950/40 hover:bg-gray-950 border border-gray-800 cursor-pointer transition-colors">
+                            <span class="text-xs text-gray-300 flex items-center gap-1.5">
+                                <i data-lucide="footprints" class="w-3.5 h-3.5"></i> G-Code Path
+                            </span>
+                            <input id="toggle-gcode-path" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600 bg-gray-900 border-gray-700 focus:ring-indigo-500" />
                         </label>
                         <label class="flex items-center justify-between p-2 rounded-lg bg-gray-950/40 hover:bg-gray-950 border border-gray-800 cursor-pointer transition-colors">
                             <span class="text-xs text-gray-300 flex items-center gap-1.5">

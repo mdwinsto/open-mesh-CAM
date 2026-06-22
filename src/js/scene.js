@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { state, config } from './state.js';
+import { state } from './state.js';
+
+const BACKGROUND_COLOR = 0x0d0f14;
 
 export function initThree() {
   const container = document.getElementById('canvas-container');
@@ -8,7 +10,7 @@ export function initThree() {
   const initialHeight = Math.max(container.clientHeight, 300);
 
   state.scene = new THREE.Scene();
-  state.scene.background = new THREE.Color(config.bgColor);
+  state.scene.background = new THREE.Color(BACKGROUND_COLOR);
 
   state.camera = new THREE.PerspectiveCamera(45, initialWidth / initialHeight, 0.1, 1000);
   state.camera.up.set(0, 0, 1);

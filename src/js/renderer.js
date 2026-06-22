@@ -13,7 +13,7 @@ export function displaySTL(geometry, filename, fileSize, isBinary) {
   geometry.computeBoundingSphere();
 
   const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(config.meshColor),
+    color: 0x374151,
     roughness: 0.4,
     metalness: 0.1,
     side: THREE.DoubleSide,
@@ -23,7 +23,7 @@ export function displaySTL(geometry, filename, fileSize, isBinary) {
   state.activeMesh.receiveShadow = true;
 
   const wireframeMat = new THREE.LineBasicMaterial({
-    color: new THREE.Color(config.edgeColor),
+    color: 0x6366f1,
     transparent: true,
     opacity: 0.8,
   });
@@ -101,13 +101,10 @@ export function applyRenderSettings() {
   state.activeMesh.visible = showMesh && config.showStlMesh;
   if (state.activeWireframe) state.activeWireframe.visible = showEdges && config.showStlMesh;
 
-  state.activeMesh.material.color.set(config.meshColor);
-  if (state.activeWireframe) state.activeWireframe.material.color.set(config.edgeColor);
-
-  state.scene.background.set(config.bgColor);
   if (state.gridHelper) state.gridHelper.visible = config.showGrid;
   if (state.boundaryConnectors) state.boundaryConnectors.visible = config.showBoundaryConnectors;
   if (state.toolMesh) state.toolMesh.visible = config.showToolMesh;
   state.activeSlices.forEach((slice) => { slice.visible = config.showSlices; });
   state.activeToolpaths.forEach((tp) => { tp.visible = config.showToolpaths; });
+  if (state.gcodeVisualization) state.gcodeVisualization.visible = config.showGcodePath;
 }

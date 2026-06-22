@@ -26,17 +26,16 @@ export const state = {
   boundaryPoints: [],
   contoursAndBoundaryPoints: [],
   toolPaths: [],
+  gcodeVisualization: null,
 };
 
 export const config = {
   renderMode: 'both',
-  meshColor: '#374151',
-  edgeColor: '#6366f1',
-  bgColor: '#0d0f14',
   showGrid: true,
   showBoundaryConnectors: true,
   showStlMesh: true,
   showToolMesh: true,
   showSlices: true,
   showToolpaths: true,
+  showGcodePath: true,
 };
